@@ -1,6 +1,6 @@
 // Service Worker: lädt online immer die neueste Version, offline aus dem Cache.
-const CACHE = 'fitnesstrack-v1';
-const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest',
+const CACHE = 'fitnesstrack-v3';
+const SHELL = ['./', './index.html', './styles.css', './recipes.js', './app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

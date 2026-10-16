@@ -421,3 +421,239 @@ h3 { margin: 0 0 14px; font-size: 20px; font-weight: 750; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* =========================================================
+   Version 0.2 · optionale Ziele, Rezepte, Vorrat, Einkauf
+   ========================================================= */
+
+.sub-head {
+  margin: 16px 0 8px !important;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.habit.is-optional:not(.is-done) { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+
+.pill {
+  flex: none;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.pill.on { background: var(--accent-soft); color: var(--ink); }
+
+.custom-min { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.custom-min[hidden] { display: none; }
+.custom-min .input { width: 120px; }
+.custom-min span { color: var(--muted); font-weight: 600; }
+
+/* Segment-Tabs (Rezepte / Vorrat / Einkauf) */
+.segtabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.segtabs button {
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.segtabs button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow), 0 0 0 1px var(--line); }
+
+.btn-row.top { margin: 0 0 12px; }
+.btn.small { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: 11px; }
+.btn.full { width: 100%; }
+.btn.big { min-height: 54px; font-size: 17px; margin-bottom: 16px; }
+.btn.danger { color: var(--danger); }
+.btn:disabled { opacity: .45; }
+.gap-top { margin-top: 12px; }
+
+.toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+.toolbar .input { flex: 1; min-width: 0; }
+.select {
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  max-width: 46%;
+}
+.input.search { -webkit-appearance: none; appearance: none; }
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px 14px;
+  padding: 2px 16px 4px;
+  scrollbar-width: none;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+.filter-chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.fchip {
+  flex: none;
+  padding: 8px 13px;
+  border-radius: 99px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.fchip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.fchip.add { border-style: dashed; color: var(--muted); }
+
+/* Rezeptliste */
+.rec-list { display: grid; gap: 10px; margin-bottom: 16px; }
+.rec-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+.rec-card:active { transform: scale(.99); }
+.rec-title { font-size: 17px; font-weight: 750; letter-spacing: -.01em; }
+.rec-title .star { color: var(--warn); margin-right: 6px; }
+.rec-meta { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.dots { letter-spacing: 1px; color: var(--accent); font-size: 11px; vertical-align: 1px; }
+.badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge.ok { background: var(--accent-soft); color: var(--ink); }
+.badge.warn { background: var(--warn-soft); color: var(--ink); }
+.badge.miss { background: var(--surface-2); color: var(--muted); }
+
+/* Rezeptdetail */
+.chip.tag { font-weight: 600; color: var(--muted); }
+.stepper.small { gap: 6px; }
+.stepper.small span { font-size: 15px; color: var(--muted); white-space: nowrap; }
+.stepper.small b { font-size: 17px; color: var(--ink); min-width: 0; }
+.ing-list { list-style: none; margin: 10px 0 14px; padding: 0; }
+.ing-list li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.ing-list li:last-child { border-bottom: 0; }
+.ing-mark { width: 18px; flex: none; text-align: center; font-weight: 800; }
+.ing-list li.have .ing-mark { color: var(--accent); }
+.ing-list li.miss .ing-mark { color: var(--warn); }
+.ing-list li.opt { color: var(--muted); }
+.steps { margin: 12px 0 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li {
+  counter-increment: s;
+  position: relative;
+  padding: 0 0 14px 40px;
+  line-height: 1.5;
+}
+.steps li::before {
+  content: counter(s);
+  position: absolute;
+  left: 0; top: -1px;
+  width: 27px; height: 27px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--accent-soft);
+  font-weight: 800;
+  font-size: 14px;
+}
+.note { color: var(--muted); font-size: 15px; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* Editor */
+.paste-card { display: flex; flex-direction: column; gap: 12px; background: var(--accent-soft); border-color: transparent; }
+.form .field-label:first-child { margin-top: 0; }
+.field-label.inline { margin: 0; }
+.lbl-hint { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.input.area { resize: vertical; line-height: 1.45; font-family: inherit; }
+.tip-box {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+.tip-box p { margin: 0 0 10px; }
+
+/* Vorrat */
+.pantry-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pchip {
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.pchip.on { background: var(--accent); color: var(--accent-ink); }
+.pchip.add { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); border: 1.5px dashed transparent; }
+.pchip.del { background: transparent; box-shadow: inset 0 0 0 1.5px var(--danger); color: var(--danger); }
+
+/* Einkaufsliste */
+.shop-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.shop-list li { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.shop-list li:last-child { border-bottom: 0; }
+.shop-item { flex: 1; display: flex; align-items: center; gap: 12px; min-height: 52px; text-align: left; flex-wrap: wrap; }
+.shop-item .check { width: 26px; height: 26px; }
+.shop-name { font-weight: 600; flex: 1; }
+.shop-item small { color: var(--muted); font-size: 12.5px; width: 100%; margin: -6px 0 6px 38px; }
+.shop-list li.done .check { background: var(--accent); border-color: var(--accent); }
+.shop-list li.done .check svg { opacity: 1; }
+.shop-list li.done .shop-name { text-decoration: line-through; color: var(--muted); }
+
+/* Proteinhinweis auf Heute */
+.hint-card { padding: 14px 16px; }
+.link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 6px;
+  text-align: left;
+  font-size: 22px;
+  color: var(--muted);
+}
+.link-row { gap: 12px; }
+.lr-emoji { font-size: 24px; flex: none; }
+.lr-text { flex: 1; display: flex; flex-direction: column; font-size: 16px; color: var(--ink); }
+.lr-text small { color: var(--muted); font-size: 13px; }
+
+/* Basiszutaten */
+.basis-card { background: var(--accent-soft); border-color: transparent; }
+.basis-hint { margin: -4px 0 12px !important; }
+.pchip.basis { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.pchip.edit { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
+.pchip.edit span { color: var(--muted); margin-left: 2px; }
+.pchip.edit.basis { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.select.wide { width: 100%; max-width: none; }

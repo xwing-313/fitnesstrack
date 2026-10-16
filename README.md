@@ -1,6 +1,6 @@
 # FitnessTrack
 
-Persönliche Web-App fürs iPhone: tägliche Ziele (Physio, Kreatin, Protein), Training eintragen, Kalender mit Verlauf.
+Persönliche Web-App fürs iPhone: tägliche Ziele, Training, Kalender mit Verlauf, Rezepte mit Vorrat und Einkaufsliste.
 Alle Daten bleiben lokal auf dem Gerät.
 
 ## Installieren
@@ -10,6 +10,6 @@ Alle Daten bleiben lokal auf dem Gerät.
 ## Fahrplan
 - [x] Phase 1: Heute-Ansicht, Training, Kalender, Backup
 - [ ] Phase 2: Erinnerungen mit Verschieben
-- [ ] Phase 3: Rezeptspeicher
-- [ ] Phase 4: Vorrat und Rezeptvorschläge
+- [x] Phase 3: Rezeptspeicher
+- [x] Phase 4: Vorrat, Rezeptvorschläge und Einkaufsliste
 - [ ] Phase 5: Progressfotos und Statistiken

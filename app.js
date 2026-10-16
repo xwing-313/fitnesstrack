@@ -1,33 +1,37 @@
 'use strict';
 
 /* =========================================================
-   FitnessTrack · Phase 1
-   Tägliche Ziele, Training, Kalender, Datensicherung.
+   FitnessTrack
+   Tägliche Ziele, Training, Kalender, Rezepte, Datensicherung.
    Alle Daten liegen lokal auf dem Gerät (localStorage).
    ========================================================= */
 
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.1';
+const SCHEMA = 2;
 const STORAGE_KEY = 'fitnesstrack.v1';
 
 /* ---------- Daten ---------- */
 
 function defaultData() {
   return {
-    schema: 1,
+    schema: SCHEMA,
     startedOn: null,
     habits: [
       { id: 'physio', name: 'Physioübungen', emoji: '🧘', since: null },
       { id: 'kreatin', name: 'Kreatin', emoji: '💊', since: null },
-      { id: 'protein', name: 'Proteinpulver', emoji: '🥤', since: null },
+      { id: 'protein', name: 'Proteinpulver', emoji: '🥤', since: null, optional: true },
     ],
     workoutTypes: [
-      { id: 'upper', name: 'Upper Body', emoji: '💪' },
-      { id: 'lower', name: 'Lower Body', emoji: '🦵' },
       { id: 'gym', name: 'Gym', emoji: '🏋️' },
-      { id: 'laufen', name: 'Laufen', emoji: '🏃' },
+      { id: 'padel', name: 'Padel', emoji: '🎾' },
+      { id: 'bouldern', name: 'Bouldern', emoji: '🧗' },
+      { id: 'dehnen', name: 'Dehnen', emoji: '🤸' },
       { id: 'sonstiges', name: 'Sonstiges', emoji: '⚡' },
     ],
     days: {},
+    recipes: sampleRecipes(),
+    pantry: defaultPantry(),
+    shopping: [],
     settings: { weeklyGoal: 4, lastBackup: null, hideInstallHint: false },
   };
 }
@@ -52,6 +56,26 @@ function migrate(d) {
   out.startedOn = out.startedOn || todayKey();
   out.habits = (out.habits || []).map(h => ({ ...h, since: h.since || out.startedOn }));
   out.days = out.days || {};
+
+  // Version 1 → 2: neue Trainingsarten, Protein optional, Rezeptbereich
+  if ((d.schema || 1) < 2) {
+    const drop = ['upper', 'lower', 'laufen'];
+    const types = (out.workoutTypes || []).filter(t => !drop.includes(t.id));
+    const add = [
+      { id: 'padel', name: 'Padel', emoji: '🎾' },
+      { id: 'bouldern', name: 'Bouldern', emoji: '🧗' },
+      { id: 'dehnen', name: 'Dehnen', emoji: '🤸' },
+    ].filter(n => !types.some(t => t.id === n.id));
+    const at = Math.max(0, types.findIndex(t => t.id === 'gym') + 1);
+    types.splice(at, 0, ...add);
+    out.workoutTypes = types;
+    const protein = out.habits.find(h => h.id === 'protein');
+    if (protein) protein.optional = true;
+  }
+  out.recipes = Array.isArray(d.recipes) ? d.recipes : sampleRecipes();
+  out.pantry = Array.isArray(d.pantry) ? d.pantry : defaultPantry();
+  out.shopping = Array.isArray(d.shopping) ? d.shopping : [];
+  out.schema = SCHEMA;
   return out;
 }
 
@@ -125,11 +149,11 @@ function shownHabits(k) {
   return data.habits.filter(h => !h.archivedOn || h.archivedOn > k);
 }
 
-// Ziele, die für das Tagesziel zählen
+// Pflicht-Ziele, die für das Tagesziel zählen (optionale zählen nicht)
 function relevantHabits(k) {
   const d = day(k);
   const anyEntry = Object.keys(d.habits).length > 0;
-  return shownHabits(k).filter(h => anyEntry || h.since <= k);
+  return shownHabits(k).filter(h => !h.optional && (anyEntry || h.since <= k));
 }
 
 function dayStatus(k) {
@@ -201,9 +225,12 @@ function viewDay(k, back) {
   const t = todayKey();
   const isToday = k === t;
   const d = day(k);
-  const hs = shownHabits(k);
+  const all = shownHabits(k);
+  const hs = all.filter(h => !h.optional);
+  const opt = all.filter(h => h.optional);
   const done = hs.filter(h => d.habits[h.id]).length;
   const st = dayStatus(k);
+  const proteinHint = d.workouts.length && typeof proteinRecipeHint === 'function' ? proteinRecipeHint() : '';
   const dt = parseKey(k);
   const weekday = dt.toLocaleDateString('de-DE', { weekday: 'long' });
   const dateStr = dt.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: dt.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
@@ -234,8 +261,11 @@ function viewDay(k, back) {
       <div class="bar"><span style="width:${hs.length ? (done / hs.length) * 100 : 0}%"></span></div>
       ${st === 'full' ? '<p class="done-banner">✓ Tagesziel erreicht</p>' : ''}
       <div class="habits">
-        ${hs.map(h => habitRow(h, d, k)).join('') || '<p class="empty">Keine Ziele angelegt. Unter „Mehr“ kannst du welche hinzufügen.</p>'}
+        ${hs.map(h => habitRow(h, d, k)).join('') || '<p class="empty">Keine Pflicht-Ziele angelegt. Unter „Mehr“ kannst du welche hinzufügen.</p>'}
       </div>
+      ${opt.length ? `
+        <p class="sub-head">Optional</p>
+        <div class="habits">${opt.map(h => habitRow(h, d, k)).join('')}</div>` : ''}
     </section>
     <section class="card">
       <div class="card-head"><h2>Training</h2>${d.workouts.length ? `<span class="count">${d.workouts.length}</span>` : ''}</div>
@@ -248,12 +278,13 @@ function viewDay(k, back) {
             <span>${esc(ty.emoji)}</span>${esc(ty.name)}
           </button>`).join('')}
       </div>
-    </section>`;
+    </section>
+    ${proteinHint}`;
 }
 
 function habitRow(h, d, k) {
   const v = d.habits[h.id];
-  let sub = 'Offen';
+  let sub = h.optional ? 'Optional · zählt nicht zum Tagesziel' : 'Offen';
   if (v) {
     sub = 'Erledigt';
     if (typeof v === 'string') {
@@ -262,7 +293,7 @@ function habitRow(h, d, k) {
     }
   }
   return `
-    <button class="habit ${v ? 'is-done' : ''}" data-action="toggle-habit" data-id="${esc(h.id)}" data-key="${k}" aria-pressed="${!!v}">
+    <button class="habit ${v ? 'is-done' : ''} ${h.optional ? 'is-optional' : ''}" data-action="toggle-habit" data-id="${esc(h.id)}" data-key="${k}" aria-pressed="${!!v}">
       <span class="habit-emoji">${esc(h.emoji)}</span>
       <span class="habit-text"><span class="habit-name">${esc(h.name)}</span><span class="habit-sub">${sub}</span></span>
       <span class="check" aria-hidden="true">${ICON_CHECK}</span>
@@ -336,22 +367,6 @@ function viewCalendar() {
     <p class="footer-note">Tippe auf einen Tag, um ihn nachzutragen oder zu ändern.</p>`;
 }
 
-/* ---------- Ansicht: Rezepte (Platzhalter) ---------- */
-
-function viewRecipes() {
-  return `
-    <header class="page-head"><p class="eyebrow">Küche</p><h1>Rezepte</h1></header>
-    <section class="card placeholder">
-      <span class="big">🍳</span>
-      <h2>Kommt in Phase 3 und 4</h2>
-      <ul>
-        <li>Rezepte mit Kurzanleitung speichern</li>
-        <li>Sortieren nach Kochdauer und Aufwand</li>
-        <li>Vorrat abhaken und passende Rezepte vorschlagen lassen</li>
-      </ul>
-    </section>`;
-}
-
 /* ---------- Ansicht: Mehr / Einstellungen ---------- */
 
 function viewSettings() {
@@ -370,12 +385,13 @@ function viewSettings() {
           <li>
             <span class="l-emoji">${esc(h.emoji)}</span>
             <span class="l-name">${esc(h.name)}</span>
+            <button class="pill ${h.optional ? '' : 'on'}" data-action="toggle-optional" data-id="${esc(h.id)}">${h.optional ? 'Optional' : 'Pflicht'}</button>
             <button class="icon-btn" data-action="move-habit" data-id="${esc(h.id)}" ${i === 0 ? 'disabled' : ''} aria-label="Nach oben">${ICON_UP}</button>
             <button class="icon-btn" data-action="remove-habit" data-id="${esc(h.id)}" aria-label="${esc(h.name)} entfernen">${ICON_TRASH}</button>
           </li>`).join('') || '<li><span class="l-name empty">Keine Ziele</span></li>'}
       </ul>
       <button class="btn add" data-action="add-habit">＋ Ziel hinzufügen</button>
-      <p class="hint">Entfernte Ziele bleiben im Verlauf erhalten.</p>
+      <p class="hint">Nur <b>Pflicht</b>-Ziele zählen für das Tagesziel. Tippe auf „Pflicht“ oder „Optional“, um es umzustellen. Entfernte Ziele bleiben im Verlauf erhalten.</p>
     </section>
 
     <section class="card">
@@ -475,7 +491,12 @@ function openWorkoutSheet(k, typeId) {
     <h3>${esc(ty.emoji)} ${esc(ty.name)}</h3>
     <label class="field-label">Dauer</label>
     <div class="seg" role="radiogroup">
-      ${[0, 30, 45, 60, 90].map(m => `<button type="button" class="seg-btn ${m === 0 ? 'on' : ''}" data-min="${m}" role="radio" aria-checked="${m === 0}">${m ? m + ' Min' : 'ohne'}</button>`).join('')}
+      ${[0, 30, 45, 60, 90, 120].map(m => `<button type="button" class="seg-btn ${m === 0 ? 'on' : ''}" data-min="${m}" role="radio" aria-checked="${m === 0}">${m ? m + ' Min' : 'ohne'}</button>`).join('')}
+      <button type="button" class="seg-btn" data-min="custom" role="radio" aria-checked="false">Eigene</button>
+    </div>
+    <div id="w-custom-wrap" class="custom-min" hidden>
+      <input id="w-custom" class="input" type="number" inputmode="numeric" min="1" max="600" placeholder="z.B. 75">
+      <span>Minuten</span>
     </div>
     <label class="field-label" for="w-note">Notiz (optional)</label>
     <input id="w-note" class="input" maxlength="140" placeholder="z.B. Rudern 3×10 mit 16 kg" autocomplete="off">
@@ -484,13 +505,22 @@ function openWorkoutSheet(k, typeId) {
       <button class="btn primary" id="w-save">Eintragen</button>
     </div>`, root => {
     let minutes = 0;
+    const wrap = $('#w-custom-wrap', root), custom = $('#w-custom', root);
     root.querySelectorAll('.seg-btn').forEach(b => {
       b.onclick = () => {
-        minutes = Number(b.dataset.min);
+        const isCustom = b.dataset.min === 'custom';
+        minutes = isCustom ? 'custom' : Number(b.dataset.min);
+        wrap.hidden = !isCustom;
+        if (isCustom) custom.focus();
         root.querySelectorAll('.seg-btn').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); });
       };
     });
     $('#w-save', root).onclick = () => {
+      if (minutes === 'custom') {
+        const n = Math.round(Number(custom.value));
+        if (!n || n < 1 || n > 600) { custom.focus(); toast('Bitte Minuten eingeben'); return; }
+        minutes = n;
+      }
       dayMut(k).workouts.push({
         id: uid(), type: ty.id, name: ty.name, emoji: ty.emoji,
         duration: minutes || null, note: $('#w-note', root).value.trim(), at: new Date().toISOString(),
@@ -550,6 +580,7 @@ function importData(file) {
 
 const actions = {
   'tab'(el) {
+    if (state.tab === el.dataset.tab && el.dataset.tab === 'recipes') resetRecipeView();
     state.tab = el.dataset.tab;
     if (state.tab !== 'calendar') state.openDay = null;
     render();
@@ -621,6 +652,14 @@ const actions = {
     });
   },
 
+  'toggle-optional'(el) {
+    const h = data.habits.find(x => x.id === el.dataset.id);
+    if (!h) return;
+    h.optional = !h.optional;
+    save(); render();
+    toast(h.optional ? `${h.name} ist jetzt optional` : `${h.name} zählt jetzt zum Tagesziel`);
+  },
+
   'remove-type'(el) {
     const ty = data.workoutTypes.find(x => x.id === el.dataset.id);
     if (!ty || !confirm(`„${ty.name}“ entfernen? Bereits eingetragene Trainings bleiben erhalten.`)) return;
@@ -636,6 +675,8 @@ const actions = {
 
   'close-sheet'() { closeSheet(); },
 };
+
+if (typeof recipeActions === 'object') Object.assign(actions, recipeActions);
 
 function shiftMonth(delta) {
   const t = todayKey();
